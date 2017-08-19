@@ -14,7 +14,7 @@ class HackChat:
     third for the nickname of the sender of the message.
     """
 
-    def __init__(self, nick, channel="programming"):
+    def __init__(self, nick, channel="programming", interval=1):
         """Connects to a channel on https://hack.chat.
 
         Keyword arguments:
@@ -27,9 +27,15 @@ class HackChat:
         self.on_message = []
         self.on_join = []
         self.on_leave = []
-        self.ws = websocket.create_connection("wss://hack.chat/chat-ws")
+        self.interval = interval
+        self.ws = websocket.create_connection("ws://chat.cavebeat.lan:6060")
         self._send_packet({"cmd": "join", "channel": channel, "nick": nick})
         threading.Thread(target = self._ping_thread).start()
+
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True                            # Daemonize thread
+        thread.start()                                  # Start the execution
+
 
     def send_message(self, msg):
         """Sends a message on the channel."""
@@ -41,8 +47,16 @@ class HackChat:
         self.ws.send(encoded)
 
     def run(self):
+#         """ Method that runs forever """
+#         while True:
+#             # Do something        
+                    
         """Sends data to the callback functions."""
         while True:
+            #print('Doing something imporant in the background')
+            time.sleep(self.interval)
+#            self.send_message("leetBot!")
+
             result = json.loads(self.ws.recv())
             if result["cmd"] == "chat" and not result["nick"] == self.nick:
                 for handler in list(self.on_message):
